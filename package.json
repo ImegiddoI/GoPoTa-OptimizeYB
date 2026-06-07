@@ -1,0 +1,19 @@
+{
+  "name": "gopota-optimize-yb",
+  "version": "1.9.5",
+  "private": true,
+  "description": "Tampermonkey userscript for reducing lag in long ChatGPT conversations.",
+  "author": "megiddo / ImegiddoI / GoPoTa",
+  "scripts": {
+    "check": "node --check gopota-optimize-yb.user.js"
+  },
+  "keywords": [
+    "tampermonkey",
+    "userscript",
+    "chatgpt",
+    "performance",
+    "optimizer",
+    "gopota"
+  ],
+  "license": "MIT"
+}
