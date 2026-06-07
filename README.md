@@ -1,6 +1,6 @@
 # GoPoTa_OptimizeYB
 
-**GoPoTa_OptimizeYB** is a Tampermonkey userscript by **megiddo / ImegiddoI / GoPoTa** for reducing lag in very long ChatGPT conversations.
+**GoPoTa_OptimizeYB** is a Tampermonkey userscript by **megiddo / GoPoTa** for reducing lag in very long ChatGPT conversations. It is a workaround, may not work fully stable, and should be used only at your own discretion.
 
 The stable release line is **v1.9.7**. It uses a stale-safe archive-block approach: older loaded messages are replaced with lightweight archive blocks, while the latest messages remain active.
 
