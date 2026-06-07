@@ -1,33 +1,14 @@
 # GoPoTa_OptimizeYB
 
-**GoPoTa_OptimizeYB** is a Tampermonkey userscript for reducing lag in long ChatGPT conversations.
+**GoPoTa_OptimizeYB** is a Tampermonkey userscript by **megiddo / ImegiddoI / GoPoTa** for reducing lag in very long ChatGPT conversations.
 
-The script keeps only the latest configurable number of ChatGPT messages active and turns older loaded messages into lightweight archive blocks. It uses a **pre-hide strict tail-lock** mode so older messages that are loaded while scrolling are hidden first and archived as quickly as possible.
+The stable release line is **v1.9.7**. It uses a stale-safe archive-block approach: older loaded messages are replaced with lightweight archive blocks, while the latest messages remain active.
 
-**Author & developer:** `megiddo` / `ImegiddoI` / `GoPoTa`  
-**Current version:** `1.9.5`  
-**Target site:** `https://chatgpt.com/*`
-
-> This is the first public release of the project. The internal script version is `1.9.5`.
-
-## Features
-
-- Strict tail-lock: keep only the latest `Keep Open` messages active.
-- Pre-hide mode for older loaded messages.
-- Archive placeholders instead of heavy old message DOM.
-- `Optimize` action for enabling strict optimization.
-- `Burn your PC` action for disabling optimization and restoring archived messages.
-- Local diagnostics export.
-- Privacy-safe diagnostics: no message text, prompts, responses, cookies, tokens, or full URLs.
-- Shadow DOM interface.
-- Draggable UI with magnetic left/right docking.
-- GoPoTa-themed compact dock and control panel.
+> Status: stable Tampermonkey build. Future development is planned as a full browser extension with a dedicated reader mode.
 
 ## Install
 
-### Direct install link
-
-Open this raw file in your browser:
+Open the raw userscript file:
 
 ```text
 https://raw.githubusercontent.com/ImegiddoI/GoPoTa-OptimizeYB/main/gopota-optimize-yb.user.js
@@ -41,60 +22,49 @@ Repository:
 https://github.com/ImegiddoI/GoPoTa-OptimizeYB
 ```
 
-
-### GitHub Raw install
-
-After publishing this repository, open:
-
-```text
-https://raw.githubusercontent.com/ImegiddoI/GoPoTa-OptimizeYB/main/gopota-optimize-yb.user.js
-```
-
-Tampermonkey should detect the userscript and offer installation.
-
-### Manual install
-
-1. Install Tampermonkey.
-2. Enable user scripts for Tampermonkey in your browser extension settings.
-3. Open Tampermonkey Dashboard.
-4. Create a new script.
-5. Delete the default template.
-6. Paste the content of `gopota-optimize-yb.user.js`.
-7. Save.
-8. Keep only one active version of GoPoTa_OptimizeYB.
-
 ## Usage
 
-1. Open a long ChatGPT conversation.
-2. Open the GoPoTa dock.
-3. Choose `Keep Open`.
-4. Press **Optimize**.
-5. Scroll the conversation.
+1. Install the script in Tampermonkey.
+2. Open a long ChatGPT conversation.
+3. Open the GoPoTa dock.
+4. Set `Keep Open` to the number of latest messages to keep active.
+5. Press **Optimize**.
+6. Use **Burn your PC** to disable optimization and restore archived messages.
 
-Use **Burn your PC** to disable optimization and restore archived messages.
+`Burn your PC` is only a joke label. It restores the current page state; it does not do anything destructive.
 
-The button name is a joke. It does not do anything destructive.
+## What v1.9.7 does
+
+- Keeps the latest `Keep Open` messages active.
+- Archives older loaded messages into lightweight blocks.
+- Allows archive blocks to be restored when their original slot is still present.
+- Blocks unsafe restore attempts when ChatGPT has already removed the slot.
+- Uses stale-safe checks to avoid inserting messages into the wrong place.
+- Provides local diagnostics export.
+- Uses a Shadow DOM GoPoTa UI with draggable magnetic docking.
 
 ## Privacy
 
-The script does not intentionally store or send conversation text.
+The script is designed not to store or send message text.
 
-Diagnostics include only counters, timings, route type, config, and performance metrics. The UI imports Roboto from Google Fonts, so the browser may request a font from Google.
+Diagnostics contain counters, timings, route type, config, and performance metrics only. They do not intentionally include prompts, responses, cookies, tokens, or full URLs.
+
+The UI may load Roboto from Google Fonts.
 
 See [`docs/PRIVACY.md`](docs/PRIVACY.md).
 
-## Auto-update
-
-Tampermonkey can update the script from GitHub Raw because the userscript header contains:
+## Diagnostics API
 
 ```js
-// @downloadURL  https://raw.githubusercontent.com/ImegiddoI/GoPoTa-OptimizeYB/main/gopota-optimize-yb.user.js
-// @updateURL    https://raw.githubusercontent.com/ImegiddoI/GoPoTa-OptimizeYB/main/gopota-optimize-yb.user.js
+GoPoTa_OptimizeYB.diagnostics()
+GoPoTa_OptimizeYB.exportDiagnostics()
+GoPoTa_OptimizeYB.optimizeNow()
+GoPoTa_OptimizeYB.restoreAll()
+GoPoTa_OptimizeYB.disable()
+GoPoTa_OptimizeYB.reset()
 ```
 
 ## Development
-
-No build step is required.
 
 Syntax check:
 
@@ -102,22 +72,7 @@ Syntax check:
 npm run check
 ```
 
-## Repository layout
-
-```text
-.
-├── gopota-optimize-yb.user.js
-├── README.md
-├── CHANGELOG.md
-├── LICENSE
-├── SECURITY.md
-├── CONTRIBUTING.md
-├── RELEASE_CHECKLIST.md
-├── package.json
-├── docs/
-├── assets/
-└── scripts/
-```
+No build step is required. The userscript is plain JavaScript.
 
 ## License
 

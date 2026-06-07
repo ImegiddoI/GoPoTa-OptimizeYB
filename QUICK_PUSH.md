@@ -1,6 +1,6 @@
 # Quick Push
 
-Copy these files into your local repo folder:
+Copy these files into your local repo folder, replacing existing files:
 
 ```text
 C:\Users\megiddo\Documents\GoPoTa-OptimizeYB
@@ -11,7 +11,7 @@ Then run:
 ```powershell
 git status
 git add .
-git commit -m "Add GitHub update URLs"
+git commit -m "Release 1.9.7 stable userscript"
 git push
 ```
 

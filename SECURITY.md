@@ -2,22 +2,22 @@
 
 ## Supported version
 
-Only the latest version in `main` is supported.
+Only the latest version in `main` is supported. Current stable userscript: **v1.9.7**.
 
 ## Reporting
 
-Open a GitHub issue and include:
+Open a GitHub issue with:
 
 - browser name and version;
 - Tampermonkey version;
-- GoPoTa_OptimizeYB version;
+- script version;
 - steps to reproduce;
 - exported diagnostics JSON, if relevant.
 
-Do not include private conversations, cookies, tokens, private screenshots, or account-sensitive data.
+Do **not** include private conversations, cookies, tokens, account-sensitive data, or screenshots with secrets.
 
 ## Security model
 
-GoPoTa_OptimizeYB is a userscript that runs on `https://chatgpt.com/*`. While active, it can read and modify the ChatGPT page DOM.
+This is a userscript running on `https://chatgpt.com/*`. It can read and modify the page DOM while active. Review the code before installing.
 
-Review the code before installing. The script is designed not to send conversation text anywhere. Diagnostics are local and must be exported manually.
+The script is designed not to send message text anywhere. Diagnostics are local and must be exported manually.

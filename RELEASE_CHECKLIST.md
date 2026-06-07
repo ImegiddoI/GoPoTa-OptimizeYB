@@ -3,21 +3,19 @@
 1. Update userscript metadata:
 
 ```js
-// @version      X.Y.Z
-var VERSION = 'X.Y.Z';
+// @version      1.9.7
+var VERSION = '1.9.7';
 ```
 
-2. Update `package.json`.
+2. Update `CHANGELOG.md`.
 
-3. Update `CHANGELOG.md`.
-
-4. Run:
+3. Run:
 
 ```bash
 npm run check
 ```
 
-5. Manual smoke test:
+4. Manual smoke test:
 
 - install in Tampermonkey;
 - open `chatgpt.com`;
@@ -25,14 +23,23 @@ npm run check
 - expand/collapse;
 - drag and magnetic docking;
 - press `Optimize`;
-- scroll a long chat upward;
+- scroll long chat upward;
 - verify older messages become archive blocks;
+- test archive block click;
 - press `Burn your PC`;
 - export diagnostics.
 
-6. Tag release:
+5. Push:
 
 ```bash
-git tag vX.Y.Z
-git push origin vX.Y.Z
+git add .
+git commit -m "Release 1.9.7 stable userscript"
+git push
+```
+
+6. Optional tag:
+
+```bash
+git tag v1.9.7
+git push origin v1.9.7
 ```

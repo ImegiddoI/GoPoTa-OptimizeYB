@@ -1,14 +1,19 @@
 # Changelog
 
-## 1.9.5
+## 1.9.7
 
-First public release.
+Final stable Tampermonkey release before extension rewrite.
 
-### Included
+### Fixed
 
-- Pre-hide strict tail-lock archiving.
-- GoPoTa-themed Shadow DOM interface.
-- Draggable magnetic dock.
-- `Optimize` and `Burn your PC` actions.
-- Local diagnostics export.
-- Privacy-safe logging.
+- Archive blocks open more reliably than the earlier public release.
+- Unsafe fallback insertion was removed to reduce the risk of misplaced message restores.
+- Restoring an archive block now requires a live placeholder slot.
+- Stale archive slots are reconciled instead of guessed.
+- Added diagnostics counters for stale slots and blocked unsafe restores.
+
+### Notes
+
+This is the recommended stable userscript version.
+
+The next major direction is a full browser extension with a separate reader/viewport mode instead of continuing to patch ChatGPT's native scroll behavior.

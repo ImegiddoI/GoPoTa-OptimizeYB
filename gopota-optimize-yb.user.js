@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         GoPoTa_OptimizeYB
 // @namespace    https://github.com/ImegiddoI/GoPoTa-OptimizeYB
-// @version      1.9.5
-// @description  Shadow-DOM safe ChatGPT optimizer with pre-hide strict tail-lock archiving, simplified GoPoTa control UI, magnetic drag, and local diagnostics.
+// @version      1.9.7
+// @description  ChatGPT long conversation optimizer with stale-safe archive slots, pre-hide strict tail-lock mode, and GoPoTa UI.
 // @author       megiddo / ImegiddoI / GoPoTa
 // @match        https://chatgpt.com/*
 // @license      MIT
@@ -16,7 +16,7 @@
 /*
  * GoPoTa_OptimizeYB
  * Author & developer: megiddo / ImegiddoI / GoPoTa
- * Version: 1.9.5
+ * Version: 1.9.7
  * License: MIT
  *
  * A Tampermonkey userscript for reducing lag in long ChatGPT conversations.
@@ -25,7 +25,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.9.5';
+  var VERSION = '1.9.7';
   var MESSAGE_SELECTOR = '[data-message-author-role]';
   var LS_CFG_KEY = 'gopota_optimize_yb_cfg_v195';
   var LS_DIAG_KEY = 'gopota_optimize_yb_diag_v195';
@@ -145,6 +145,8 @@
       mutationArchives: 0,
       prehiddenMessages: 0,
       unprotectedArchives: 0,
+      staleArchiveSlots: 0,
+      blockedUnsafeRestores: 0,
       maxHidden: 0,
       longTasks: 0,
       longTaskMs: 0
@@ -238,8 +240,9 @@
       '.gopota-yb-placeholder strong{color:#fff;font-weight:750}',
       '.gopota-yb-placeholder small{opacity:.78}',
       '.gopota-yb-enabled.gopota-yb-content-visibility ' + MESSAGE_SELECTOR + '{content-visibility:auto;contain-intrinsic-size:600px 400px}',
-      '.gopota-yb-tail-prehide ' + MESSAGE_SELECTOR + ':not([data-gopota-yb-live="1"]){visibility:hidden!important;opacity:0!important;pointer-events:none!important}',
-      '.gopota-yb-tail-prehide ' + MESSAGE_SELECTOR + '[data-gopota-yb-live="1"]{visibility:visible!important;opacity:1!important}',
+      '.gopota-yb-tail-prehide ' + MESSAGE_SELECTOR + ':not([data-gopota-yb-live="1"]):not([data-gopota-yb-restored="1"]){visibility:hidden!important;opacity:0!important;pointer-events:none!important}',
+      '.gopota-yb-tail-prehide ' + MESSAGE_SELECTOR + '[data-gopota-yb-live="1"]{visibility:visible!important;opacity:1!important;pointer-events:auto!important}',
+      '.gopota-yb-tail-prehide ' + MESSAGE_SELECTOR + '[data-gopota-yb-restored="1"]{visibility:visible!important;opacity:1!important;pointer-events:auto!important}',
       '.gopota-yb-enabled.gopota-yb-no-animations ' + MESSAGE_SELECTOR + ' *{animation:none!important;transition:none!important}'
     ].join('\n');
 
@@ -293,7 +296,8 @@
     var role = record.role || 'message';
     left.innerHTML = '<strong>GoPoTa archived ' + escapeHtml(role) + '</strong><br><small>click to restore this message</small>';
 
-    var right = createEl('small', '', '#' + record.id);
+    var right = createEl('small', '', 'open');
+    right.dataset.gopotaYbInternalId = String(record.id);
     ph.appendChild(left);
     ph.appendChild(right);
 
@@ -321,7 +325,45 @@
     }
   }
 
+  function reconcileRecords(reason) {
+    var removed = 0;
+
+    try {
+      for (var i = state.records.length - 1; i >= 0; i--) {
+        var rec = state.records[i];
+
+        if (!rec || !rec.placeholder || !rec.placeholder.isConnected) {
+          if (rec && rec.node) {
+            try {
+              delete rec.node.dataset.gopotaYbArchived;
+              delete rec.node.dataset.gopotaYbLive;
+              delete rec.node.dataset.gopotaYbRestored;
+            } catch (e) {}
+          }
+
+          state.records.splice(i, 1);
+          removed += 1;
+        }
+      }
+
+      if (removed) {
+        state.metrics.staleArchiveSlots += removed;
+        logEvent('archive-slot-reconcile', {
+          reason: reason || 'unknown',
+          removed: removed,
+          hidden: state.records.length
+        });
+      }
+    } catch (err) {
+      recordError('reconcile-records', err);
+    }
+
+    return removed;
+  }
+
   function getConversationItems() {
+    reconcileRecords('get-items');
+
     try {
       var nodes = Array.prototype.slice.call(document.querySelectorAll(MESSAGE_SELECTOR + ', .gopota-yb-placeholder'));
       return nodes.filter(function (node) {
@@ -403,7 +445,8 @@
         parent: node.parentNode,
         placeholder: null,
         role: node.getAttribute('data-message-author-role') || '',
-        height: h
+        height: h,
+        archivedAt: Date.now()
       };
 
       var ph = makePlaceholder(record);
@@ -411,6 +454,7 @@
 
       node.dataset.gopotaYbArchived = '1';
       delete node.dataset.gopotaYbLive;
+      delete node.dataset.gopotaYbRestored;
       node.parentNode.replaceChild(ph, node);
       state.records.push(record);
       return true;
@@ -453,6 +497,10 @@
 
     for (var i = 0; i < items.length; i++) {
       if (items[i].type === 'message') active += 1;
+
+      if (items[i].type === 'message' && items[i].node.dataset.gopotaYbRestored === '1') {
+        continue;
+      }
 
       if (tailPrehideActive() && state.tailLiveInitialized && !nearBottom()) {
         // Fast-scroll mode: every newly loaded old message starts hidden by CSS
@@ -617,13 +665,23 @@
       if (String(rec.id) !== String(id)) continue;
 
       try {
-        if (rec.placeholder && rec.placeholder.parentNode) {
-          rec.placeholder.parentNode.replaceChild(rec.node, rec.placeholder);
-        } else if (rec.parent && rec.parent.isConnected) {
-          rec.parent.appendChild(rec.node);
+        if (!rec.placeholder || !rec.placeholder.parentNode || !rec.placeholder.isConnected) {
+          state.records.splice(i, 1);
+          state.metrics.blockedUnsafeRestores += 1;
+          logEvent('restore-blocked-stale-slot', {
+            reason: reason || 'manual',
+            id: rec.id,
+            hidden: state.records.length
+          });
+          setStatus('stale archive slot · reload if needed');
+          updateUI();
+          return false;
         }
+
+        rec.placeholder.parentNode.replaceChild(rec.node, rec.placeholder);
         delete rec.node.dataset.gopotaYbArchived;
         delete rec.node.dataset.gopotaYbLive;
+        rec.node.dataset.gopotaYbRestored = '1';
         state.records.splice(i, 1);
         state.metrics.restoredTotal += 1;
         logEvent('restore-one', { reason: reason || 'manual', id: rec.id, hidden: state.records.length });
@@ -648,21 +706,33 @@
 
     var copy = state.records.slice();
     var restored = 0;
+    var stale = 0;
+
     copy.forEach(function (rec) {
       try {
-        if (rec.placeholder && rec.placeholder.parentNode) {
+        if (rec.placeholder && rec.placeholder.parentNode && rec.placeholder.isConnected) {
           rec.placeholder.parentNode.replaceChild(rec.node, rec.placeholder);
-        } else if (rec.parent && rec.parent.isConnected) {
-          rec.parent.appendChild(rec.node);
+          delete rec.node.dataset.gopotaYbArchived;
+          delete rec.node.dataset.gopotaYbLive;
+          delete rec.node.dataset.gopotaYbRestored;
+          restored += 1;
+        } else {
+          stale += 1;
+          if (rec.node) {
+            delete rec.node.dataset.gopotaYbArchived;
+            delete rec.node.dataset.gopotaYbLive;
+            delete rec.node.dataset.gopotaYbRestored;
+          }
         }
-        delete rec.node.dataset.gopotaYbArchived;
-        delete rec.node.dataset.gopotaYbLive;
-        restored += 1;
       } catch (err) {
         recordError('restore-all-item', err);
       }
     });
     state.records = [];
+    if (stale) {
+      state.metrics.staleArchiveSlots += stale;
+      logEvent('restore-all-stale-slots', { reason: reason || 'manual', stale: stale });
+    }
     state.metrics.restoredTotal += restored;
     logEvent('restore-all', { reason: reason || 'manual', restored: restored });
     setStatus('restored ' + restored);
@@ -678,6 +748,7 @@
         if (rec.node) {
           delete rec.node.dataset.gopotaYbArchived;
           delete rec.node.dataset.gopotaYbLive;
+          delete rec.node.dataset.gopotaYbRestored;
         }
       } catch (err) {}
     });
@@ -1785,6 +1856,33 @@
     return false;
   }
 
+  function setupPlaceholderDelegate() {
+    if (state.placeholderDelegateReady) return;
+
+    try {
+      document.addEventListener('click', function (ev) {
+        var target = ev.target;
+        if (!target || !target.closest) return;
+
+        var ph = target.closest('.gopota-yb-placeholder');
+        if (!ph || !ph.isConnected) return;
+        if (ph.closest('#gopota-optimize-yb-host')) return;
+
+        var id = ph.dataset && ph.dataset.gopotaYbId;
+        if (!id) return;
+
+        ev.preventDefault();
+        ev.stopPropagation();
+        restoreOne(id, 'placeholder-click-delegate');
+      }, true);
+
+      state.placeholderDelegateReady = true;
+      logEvent('placeholder-delegate', { enabled: true });
+    } catch (err) {
+      recordError('setup-placeholder-delegate', err);
+    }
+  }
+
   function scheduleArchiveDrain(reason, delay) {
     if (!cfg.enabled || !cfg.auto || !cfg.mutationAuto) return;
     state.mutationReason = reason || state.mutationReason || 'mutation-auto';
@@ -1881,6 +1979,9 @@
       hiddenMessages: state.records.length,
       activeMessages: getActiveMessages().length,
       totalMessageItems: getConversationItems().length,
+      restoredOpenMessages: document.querySelectorAll(MESSAGE_SELECTOR + '[data-gopota-yb-restored="1"]').length,
+      staleArchiveSlots: state.metrics.staleArchiveSlots,
+      blockedUnsafeRestores: state.metrics.blockedUnsafeRestores,
       log: state.log.slice(-cfg.maxLogEntries)
     };
   }
@@ -1975,6 +2076,7 @@
       }, { passive: true });
 
       window.addEventListener('scroll', onScroll, { passive: true });
+      setupPlaceholderDelegate();
       setupMutationObserver();
     } catch (err) {
       recordError('start-ui', err);
