@@ -1,12 +1,16 @@
 // ==UserScript==
 // @name         GoPoTa_OptimizeYB
-// @namespace    https://chatgpt.com/
+// @namespace    https://github.com/ImegiddoI/GoPoTa-OptimizeYB
 // @version      1.9.5
 // @description  Shadow-DOM safe ChatGPT optimizer with pre-hide strict tail-lock archiving, simplified GoPoTa control UI, magnetic drag, and local diagnostics.
 // @author       megiddo / ImegiddoI / GoPoTa
 // @match        https://chatgpt.com/*
 // @license      MIT
 // @grant        GM_addStyle
+// @homepageURL  https://github.com/ImegiddoI/GoPoTa-OptimizeYB
+// @supportURL   https://github.com/ImegiddoI/GoPoTa-OptimizeYB/issues
+// @downloadURL  https://raw.githubusercontent.com/ImegiddoI/GoPoTa-OptimizeYB/main/gopota-optimize-yb.user.js
+// @updateURL    https://raw.githubusercontent.com/ImegiddoI/GoPoTa-OptimizeYB/main/gopota-optimize-yb.user.js
 // ==/UserScript==
 
 /*

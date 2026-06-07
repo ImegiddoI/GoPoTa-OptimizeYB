@@ -25,12 +25,29 @@ The script keeps only the latest configurable number of ChatGPT messages active 
 
 ## Install
 
+### Direct install link
+
+Open this raw file in your browser:
+
+```text
+https://raw.githubusercontent.com/ImegiddoI/GoPoTa-OptimizeYB/main/gopota-optimize-yb.user.js
+```
+
+Tampermonkey should detect the script and offer installation.
+
+Repository:
+
+```text
+https://github.com/ImegiddoI/GoPoTa-OptimizeYB
+```
+
+
 ### GitHub Raw install
 
 After publishing this repository, open:
 
 ```text
-https://raw.githubusercontent.com/<OWNER>/<REPO>/main/gopota-optimize-yb.user.js
+https://raw.githubusercontent.com/ImegiddoI/GoPoTa-OptimizeYB/main/gopota-optimize-yb.user.js
 ```
 
 Tampermonkey should detect the userscript and offer installation.
@@ -65,6 +82,15 @@ The script does not intentionally store or send conversation text.
 Diagnostics include only counters, timings, route type, config, and performance metrics. The UI imports Roboto from Google Fonts, so the browser may request a font from Google.
 
 See [`docs/PRIVACY.md`](docs/PRIVACY.md).
+
+## Auto-update
+
+Tampermonkey can update the script from GitHub Raw because the userscript header contains:
+
+```js
+// @downloadURL  https://raw.githubusercontent.com/ImegiddoI/GoPoTa-OptimizeYB/main/gopota-optimize-yb.user.js
+// @updateURL    https://raw.githubusercontent.com/ImegiddoI/GoPoTa-OptimizeYB/main/gopota-optimize-yb.user.js
+```
 
 ## Development
 
